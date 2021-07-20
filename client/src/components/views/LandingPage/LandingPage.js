@@ -5,7 +5,9 @@ import { Icon, Col, Card, Row} from 'antd';
 import Meta from 'antd/lib/card/Meta';
 import { set } from 'mongoose';
 import CheckBox from './Sections/CheckBox';
-import { continents } from './Sections/Datas';
+import RadioBox from './Sections/RadioBox';
+import { continents, price } from './Sections/Datas';
+
 
 function LandingPage(porps) {
 
@@ -38,7 +40,7 @@ function LandingPage(porps) {
                     } else{
                         setProducts(response.data.productInfo)
                     }
-                    console.log("setProducts후 Products: ", Products)
+                   // console.log("setProducts후 Products: ", Products)
                     setPostSize(response.data.postSize)                 
                 }else{
                     alert("상품들을 가져오는데 실패했습니다.")
@@ -76,7 +78,7 @@ function LandingPage(porps) {
     })
 
 
-    const showFilterResults = (filters) => {
+    const showFilterResults = (filters) => {        // 필터 적용시 바뀔 화면
         let body = {
             skip: 0,                    // 필터 체크할 때마다 첫 번째 부터 가져오니까
             limit: Limit,
@@ -85,15 +87,37 @@ function LandingPage(porps) {
         getProducts(body)               //필터 선택 결과에 따라 카드 정보를 새로 가져온다.
         setSkip(0)
     }
+    
+    const handlePrice = (value) => {
+        console.log("handlePrice 함수로 전달된 파라미터 value:", value);
+        const data = price;                //Datas.js에 지정한 price 리스트 전부
+        let array = [];
 
+        for (let key in data){
+            if (data[key]._id === parseInt(value, 10)){
+                array = data[key].array;   // price.array 즉 [0, 199] 이런 값
+            }
+        }
+        console.log("handlePrice 함수 리턴값", array);
+
+        return array;
+    }
 
     const handleFilters = (filters, category) =>{
 
         const newFilters = {...Filters}
 
         newFilters[category] = filters
+        console.log("filters: ", filters) 
+        console.log("category: ", category)
+
+        if(category === "price"){
+            let priceValues = handlePrice(filters)
+            newFilters[category] = priceValues      // priceValues에는 price.array 저장됨
+        }
 
         showFilterResults(newFilters)
+        setFilters(newFilters)                      // 대륙 필터와 가격 필터가 각각 변할 때마다 set해줘야 둘 다 저장해둘 수 있음. 이게 없으면 어느 하나는 초기화로 빈 값 가짐
     }
 
 
@@ -104,11 +128,22 @@ function LandingPage(porps) {
             </div>
 
             { /* filter */}
+            <Row gutter={[16,16]}>
+                <Col lg={12} xs={24}>
+                { /* CheckBox */}
+                <CheckBox list={continents} 
+                            handleFilters={filters => handleFilters(filters, "continents")}/>
 
-            { /* CheckBox */}
-            <CheckBox list={continents} 
-                        handleFilters={filters => handleFilters(filters, "continents")}/>
+                </Col>
+                <Col lg={12} xs={24}>
+                { /* RadioBox */}
+                <RadioBox list={price} 
+                            handleFilters={filters => handleFilters(filters, "price")}/>
+               
+                </Col>
+            </Row>
 
+            
             { /* RadioBox */}
 
             { /* Search */}

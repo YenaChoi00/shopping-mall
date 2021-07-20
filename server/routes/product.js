@@ -43,13 +43,23 @@ router.post('/products', (req, res) => {
     let limit = req.body.limit ? parseInt(req.body.limit): 20;  // LandingPage.js의 body로 받은 정보
     let skip = req.body.skip ? parseInt(req.body.skip): 0;
 
-    // 데이터 가져올 때. 선택된 필터 조건이 2번째면 findArgs = { continets: [ 2 ] }
+    // 데이터 가져올 때. 선택된 필터 조건이 2번째 check box면 findArgs = { continets: [ 2 ] }
     let findArgs = {};
 
-    for (let key in req.body.filters){  // key는 continents 혹은 price(어쩐 필터인지)
+    for (let key in req.body.filters){        // key는 continents 혹은 price(어떤 필터인지)
 
       if(req.body.filters[key].length > 0){   // 하나 이상 들어있으면
-        findArgs[key] = req.body.filters[key];
+        
+        console.log("key:", key)
+        
+        if(key === "price"){
+          findArgs[key] = {
+            $gte: req.body.filters[key][0],   // grater than equal. 몽고db에서 사용하는 것
+            $lte: req.body.filters[key][1]    // less than equal.
+          }
+        } else{
+          findArgs[key] = req.body.filters[key];
+        }
       }
     }
 
@@ -57,7 +67,7 @@ router.post('/products', (req, res) => {
 
     Product.find(findArgs)  
       .populate("writer")
-      .skip(skip)         // 몽고db에 알려주는 것
+      .skip(skip)                             // 몽고db에 알려주는 것
       .limit(limit)
       .exec((err, productInfo) => { 
         if(err) return res.status(400).json({ success: false, err})
