@@ -7,16 +7,20 @@ import { set } from 'mongoose';
 import CheckBox from './Sections/CheckBox';
 import { continents } from './Sections/Datas';
 
-function LandingPage() {
+function LandingPage(porps) {
 
     const [Products, setProducts] = useState([])
     const [Skip, setSkip] = useState(0)
     const [Limit, setLimit] = useState(8)
     const [PostSize, setPostSize] = useState(0)
+    const [Filters, setFilters] = useState({
+        continents: [],     // 도시 필터
+        price: []           // 가격 필터
+    })
 
     useEffect(() => {
 
-        let body = {    // request보낼 때 같이 보냄
+        let body = {        // request보낼 때 같이 보냄
             skip: Skip,
             limit: Limit
         }
@@ -29,7 +33,7 @@ function LandingPage() {
         axios.post('/api/product/products', body ) // 랜더링 후 바로 작동되는 부분, 더보기 버튼 누르고 작동하는(request보내는) 부분
             .then(response => {
                 if (response.data.success){
-                    if(body.loadMore){  // (1) 더보기 버튼을 눌러서 refresh되었을 때는
+                    if(body.loadMore){                                           // (1) 더보기 버튼을 눌러서 refresh되었을 때는
                         setProducts([...Products, ...response.data.productInfo]) // (2) 기존정보(...Product)+새정보 띄운다.
                     } else{
                         setProducts(response.data.productInfo)
@@ -48,15 +52,16 @@ function LandingPage() {
         let body={
             skip: skip,
             limit: Limit,
-            loadMore: true      /* 이 동작은 더보기 버튼을 눌러서 가져온 것이라는 의미 */
+            loadMore: true              /* 이 동작은 더보기 버튼을 눌러서 가져온 것이라는 의미 */
         }
 
         getProducts(body)  
-        setSkip(skip)           /* 변한 skip값 저장 */
+        setSkip(skip)                   /* 변한 skip값 저장 */
     }
 
     const renderCards = Products.map((product, index) => {  // map은 product 하나씩 관리하기 위한 메소드
-        /* 큰 화면(lg)일 때 하나는 6size(한 줄에 4개), 제일 작은 화면(xs)일 때 하나는 24size(한 줄에 1개) */
+        /* 큰 화면(lg)일 때 하나는 6size(한 줄에 4개), 
+        제일 작은 화면(xs)일 때 하나는 24size(한 줄에 1개) */
         return <Col lg={6} md={8} xs={24} key={index}> 
             <Card            
                 cover={<img style={{ width: '100%', maxHeight: '150px'}} 
@@ -70,6 +75,28 @@ function LandingPage() {
         </Col>
     })
 
+
+    const showFilterResults = (filters) => {
+        let body = {
+            skip: 0,                    // 필터 체크할 때마다 첫 번째 부터 가져오니까
+            limit: Limit,
+            filters: filters
+        }
+        getProducts(body)               //필터 선택 결과에 따라 카드 정보를 새로 가져온다.
+        setSkip(0)
+    }
+
+
+    const handleFilters = (filters, category) =>{
+
+        const newFilters = {...Filters}
+
+        newFilters[category] = filters
+
+        showFilterResults(newFilters)
+    }
+
+
     return (
         <div style={{ width: '75%', margin: '3rem auto'}}>
             <div style={{ textAlign: 'center'}}>
@@ -79,7 +106,8 @@ function LandingPage() {
             { /* filter */}
 
             { /* CheckBox */}
-            <CheckBox list={continents} />
+            <CheckBox list={continents} 
+                        handleFilters={filters => handleFilters(filters, "continents")}/>
 
             { /* RadioBox */}
 

@@ -27,6 +27,10 @@ const productSchema = mongoose.Schema({
         maxlength: 100,
         default: 0
     },
+    continents: {   // 필터에서 사용. 어느 나라인지
+        type: Number,
+        default: 1
+    },
     views:{
         type: Number,
         default: 0
