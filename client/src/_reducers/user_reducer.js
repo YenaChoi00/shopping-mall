@@ -3,6 +3,8 @@ import {
     REGISTER_USER,
     AUTH_USER,
     LOGOUT_USER,
+    ADD_TO_CART,
+    GET_CART_ITEMS
 } from '../_actions/types';
  
 
@@ -15,6 +17,14 @@ export default function(state={},action){
         case AUTH_USER:
             return {...state, userData: action.payload }
         case LOGOUT_USER:
+            return {...state }
+        case ADD_TO_CART:
+            return {...state,
+                    userData: {
+                        ...state.userData,
+                        cart: action.payload    // 백에서 보내는 userInfo.cart임
+                    } }
+        case GET_CART_ITEMS:
             return {...state }
         default:
             return state;

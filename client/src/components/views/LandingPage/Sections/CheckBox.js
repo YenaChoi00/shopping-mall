@@ -34,7 +34,7 @@ function CheckBox(props) {                          // LandingPage.js에서 list
     
     return (
         <div>
-            <Collapse defaultActiveKey={['1']}>
+            <Collapse defaultActiveKey={['0']}>
                 <Panel header="Continents" key="1">
                     {renderCheckBoxLists()}
                 </Panel>

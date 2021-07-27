@@ -26,6 +26,14 @@ const userSchema = mongoose.Schema({
         type:Number,
         default: 0 
     },
+    cart:{  // 현재 장바구니 정보임
+        type: Array,
+        default: []
+    },
+    history: {  // 구매 내역 등
+        type: Array,
+        default: []
+    },
     image: String,
     token : {
         type: String,

@@ -66,8 +66,9 @@ function LandingPage(porps) {
         제일 작은 화면(xs)일 때 하나는 24size(한 줄에 1개) */
         return <Col lg={6} md={8} xs={24} key={index}> 
             <Card            
-                cover={<img style={{ width: '100%', maxHeight: '150px'}} 
-                src={`http://localhost:5000/${product.images[0]}`}/>}
+                cover={<a href={`/product/${product._id}`}>     {/* 상세페이지로 이동하는 링크 걸어주기 */}
+                        <img style={{ width: '100%', maxHeight: '150px'}} 
+                src={`http://localhost:5000/${product.images[0]}`}/></a>}
                 >
                 <Meta 
                     title={product.title}

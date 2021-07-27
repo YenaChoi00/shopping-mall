@@ -77,5 +77,25 @@ router.post('/products', (req, res) => {
       })
 })
 
+// 상품 상세 정보
+router.get('/products_by_id', (req, res) =>{ 
+  
+  let type = req.query.type
+  let productIds = req.query.id
+
+  if(type === "array"){
+    let ids = req.query.id.split(',')
+  }
+
+  // productId(clinet에서 보낸 prop)를 이용하여 DB에서 productId와 같은 상품의 정보를 가져온다.
+  Product.find({_id: {$in: productIds})   // 상세 페이지 처럼 하나만 오는거면 {_id: productIds} 하면 됨
+    .populate('writer')
+    .exec((err, product) => {
+      if(err) return res.status(400).send(err)
+      return res.status(200).send({success: true, product})
+    })
+})
+
+
 
 module.exports = router;
