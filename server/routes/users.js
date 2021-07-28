@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { User } = require("../models/User");
-
+const { Product } = require("../models/Product");
 const { auth } = require("../middleware/auth");
 
 //=================================
@@ -78,7 +78,7 @@ router.post("/addToCart", auth, (req, res) => {
         let duplicate = false
         userInfo.cart.forEach((item) => {
             if(item.id === req.body.productId){
-                duplicate: true
+                duplicate = true
             }
         })
 
@@ -86,7 +86,7 @@ router.post("/addToCart", auth, (req, res) => {
         if (duplicate) {
             User.findOneAndUpdate(
                 { _id: req.user._id, "cart.id": req.body.productId },
-                { $inc: { "cart.$.quantity": 1 } },
+                { $inc: { "cart.$.quantity": 1 } },         //$inc 는 하나 증가하는 메소드
                 { new: true },
                 (err, userInfo) => {
                     if (err) return res.status(200).json({ success: false, err })
@@ -115,11 +115,40 @@ router.post("/addToCart", auth, (req, res) => {
             )
         }
     })
-
-
-    
-
-    // 상품이 없을 때
 });
+
+
+router.get('/removeFromCart', auth, (req, res)=>{
+    // cart안에 지우려고 한 상품을 지워주기
+    User.findOneAndUpdate(
+        {_id: req.user._id},
+        {
+            "$pull": 
+                {"cart": {"id": req.query.id}}
+        },
+        {new: true},
+        (err, userInfo) => {
+            let cart = userInfo.cart
+            let array = cart.map(item => {
+                return item.id
+            })
+        // product Collection에서 현재 남아있는 상품들의 정보, cartDetail 다시 가져오기
+
+
+            // id = 121212, 23232, 344532..로 받아온 것을
+            // productIds = ['121212', '23232', '344532'] 로 바꾸는 작업
+            Product.find({ _id: { $in: array } })
+            .populate('writer')
+            .exec((err, productInfo) => {
+                return res.status(200).json({
+                    productInfo,
+                    cart
+                })
+            })
+        
+        }
+    )
+
+})
 
 module.exports = router;
