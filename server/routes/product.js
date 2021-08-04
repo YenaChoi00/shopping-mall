@@ -80,7 +80,7 @@ router.post('/products', (req, res) => {
 // 상품 상세 정보
 router.get('/products_by_id', (req, res) =>{ 
     
-  let type = req.query.type
+  let type = req.query.type               // req.body 대신 req.query   
   let productIds = req.query.id
 
   if(type === "array"){

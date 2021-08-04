@@ -3,6 +3,9 @@ const router = express.Router();
 const { User } = require("../models/User");
 const { Product } = require("../models/Product");
 const { auth } = require("../middleware/auth");
+const { Payment } = require("../models/Payment");
+const async = require('async');
+
 
 //=================================
 //             User
@@ -148,7 +151,85 @@ router.get('/removeFromCart', auth, (req, res)=>{
         
         }
     )
+})
+
+router.post('/successBuy', auth, (req, res)=>{
+    // 1. User collection 안에 History 필드 안에 간단한 결제 정보 넣어주기
+    let historyArr = [];
+    let transactionData = {};
+
+    req.body.cartDetail.forEach((item) => {     // cartDetail은 CartPage에서 액션의 props로 보내준 것
+        historyArr.push({
+            dateOfPurchase: Date.now(),
+            name: item.title,
+            id: item._id,
+            price: item.price,
+            quantity: item.quantity,
+            paymentId: req.body.paymentData.paymentID // patmentData라는 이름으로 CartPage에서 액션의 props로 보내준 것
+        })
+    })
+
+    // 2. Payment collection 안에 자세한 결제 정보 넣어주기
+    // 미들웨어를 통해 들어온 정보들이라 req.user 이렇게.. 
+    transactionData.user = {
+        id: req.user._id,
+        name: req.user.name,
+        email: req.user.email
+    }
+
+    transactionData.data = req.body.paymentData
+    transactionData.product = historyArr
+
+
+    User.findOneAndUpdate(
+        { _id: req.user._id },
+        { $push: { history: historyArr }, $set: { cart: [] } },     // 카트 비워주기($set)
+        { new: true },
+        (err, user) => {
+            if (err) return res.json({ success: false, err })
+
+            //payment에다가  transactionData정보 저장 
+            const payment = new Payment(transactionData)
+            payment.save((err, doc) => {
+                if (err) return res.json({ success: false, err })
+
+
+                //3. Product Collection 안에 있는 sold 필드 정보 업데이트 시켜주기 
+
+                //상품 당 몇개의 quantity를 샀는지 
+                let products = [];
+                doc.product.forEach(item => {
+                    products.push({ id: item.id, quantity: item.quantity })
+                })
+
+                // 상품 정보 중, sold 필드 업데이트
+                // 결제 성공한 모든 product의 sold를 업뎃해야 하는데, for문은 복잡하므로 async 사용
+                async.eachSeries(products, (item, callback) => {
+
+                    Product.update(
+                        { _id: item.id },
+                        {
+                            $inc: {
+                                "sold": item.quantity           // 팔린 갯수만큼 sold 업데이트
+                            }
+                        },
+                        { new: false },
+                        callback
+                    )
+                }, (err) => {
+                    if (err) return res.status(400).json({ success: false, err })
+                    res.status(200).json({
+                        success: true,
+                        cart: user.cart,
+                        cartDetail: []
+                    })
+                }
+                )
+            })
+        }
+    )
 
 })
+
 
 module.exports = router;

@@ -6,7 +6,8 @@ import {
     LOGOUT_USER,
     ADD_TO_CART,
     GET_CART_ITEMS,
-    REMOVE_CART_ITEM
+    REMOVE_CART_ITEM,
+    ON_SUCCESS_BUY
 } from './types';
 import { USER_SERVER } from '../components/Config.js';
 
@@ -66,7 +67,7 @@ export function getCartItems(cartItems, userCart) {                             
 
     const request = axios.get(`/api/product/products_by_id?id=${cartItems}&type=array`)     // 2. 라우터로 보냄
         .then(response => {                                                                 // 3. 라우터에서 product 상품정보를 response로 받음
-            // CartItem들에 해당하는 정보들을  
+            // CartItem들에 해당하는 product 정보들을  
             // Product Collection에서 가져온후에 
             // Quantity 정보를 넣어 준다.
             userCart.forEach(cartItem => {
@@ -103,6 +104,17 @@ export function removeCartItem(productId){
 
     return {
         type: REMOVE_CART_ITEM,
+        payload: request
+    }
+}
+
+export function onSuccessBuy(data) { 
+
+    const request = axios.post(`/api/users/successBuy`, data)
+        .then(response => response.data);
+
+    return {
+        type:  ON_SUCCESS_BUY,
         payload: request
     }
 }
